@@ -2,6 +2,8 @@
 #include "PayManager.h"
 #include "PaySegment.h"
 #include "Modifier.h"
+#include "HexOperations.h"
+#include "Logger.h"
 #include <sstream>
 #include <cstdio>
 
@@ -10,7 +12,7 @@ using namespace MemUtil;
 
 int main(int argc, char * argv[])
 {	
-	std::string processName("MagmaCompiler.exe");
+	std::string processName("VESPER5.exe");
 	
 	DWORD processID = MemoryUtility::FindProcessId(processName);
 
@@ -20,9 +22,19 @@ int main(int argc, char * argv[])
 		std::wcout << "Process ID is " << processID << std::endl;
 	
 	stringstream ss;
-	string offset;
-	ss << hex << MemoryUtility::GetModuleBase(processName.c_str(), processID);
+	long base;
+	long offset;
+	ss << hex << "5885";
 	ss >> hex >> offset;
+
+	base = MemoryUtility::GetModuleBase(processName.c_str(), processID);
+	cout << "Base: " << hex << base << endl;
+
+	long move = base+offset;
+	//ss << hex << MemUtil::HexOperations::hexadd(offset, base);
+	//ss >> hex >> move;
+
+	cout << "Address:" << hex << move << endl;
 
 	HANDLE proc = MemoryUtility::AttachToProcess(processID, false);
 	if(proc == NULL)
@@ -31,34 +43,16 @@ int main(int argc, char * argv[])
 		system("PAUSE");
 	}
 	
-	//Scroll speedcheck
+	
+
 	PayManager payManager(proc);
-	PaySegment speedCheckSegment;
-	Payload speedCheckPayload;
-	speedCheckPayload.BuildPayload("EB05"); //JMP SHORT 0042DCE0
-	speedCheckSegment.AddPayload(0x042DCD9, speedCheckPayload);
-	
-	//Song length check
-	Payload songTooLongOne("EB2A"); //JMP SHORT 004294FF
-	Payload songTooLongTwo("EB41"); //JMP SHORT 0041F794
-	PaySegment songLengthSegment;
-	songLengthSegment.AddPayload(0x04294D3, songTooLongOne);
-	songLengthSegment.AddPayload(0x041F751, songTooLongTwo);
 
-	//track type check
-	Payload trackTypeCheck("EB3E"); //JMP SHORT 00438B22
-	PaySegment trackTypeSegment(0x0438AE2, trackTypeCheck);
-	
 	//release date checks
-	Payload releaseDateOne("EB45"); //JMP SHORT 0042D965
-	PaySegment releaseCheckSegment(0x042D91E, releaseDateOne);
-	Payload releaseDateTwo("EBDA"); //JMP SHORT 0042D946
-	releaseCheckSegment.AddPayload(0x042D96A, releaseDateTwo);
+	Payload moremoves("EB11"); //JMP SHORT ....
+	PaySegment moveSegment(move, moremoves);
+	
 
-	payManager.AddSegment(releaseCheckSegment);
-	payManager.AddSegment(trackTypeSegment);
-	payManager.AddSegment(songLengthSegment);
-	payManager.AddSegment(speedCheckSegment);
+	payManager.AddSegment(moveSegment);
 	payManager.Inject();
 
 }
