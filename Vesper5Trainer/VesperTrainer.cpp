@@ -31,8 +31,6 @@ int main(int argc, char * argv[])
 	cout << "Base: " << hex << base << endl;
 
 	long move = base+offset;
-	//ss << hex << MemUtil::HexOperations::hexadd(offset, base);
-	//ss >> hex >> move;
 
 	cout << "Address:" << hex << move << endl;
 
@@ -43,15 +41,11 @@ int main(int argc, char * argv[])
 		system("PAUSE");
 	}
 	
-	
-
 	PayManager payManager(proc);
 
-	//release date checks
 	Payload moremoves("EB11"); //JMP SHORT ....
 	PaySegment moveSegment(move, moremoves);
 	
-
 	payManager.AddSegment(moveSegment);
 	payManager.Inject();
 
